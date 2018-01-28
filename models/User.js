@@ -45,7 +45,7 @@ User.schema.virtual('canAccessKeystone').get(function () {
 User.schema.methods.toJSON=function(){
     var user = this;
     var userObject = user.toObject();
-    return _.pick(userObject,['_id','email','username','name']);
+    return _.pick(userObject,['_id','email','username','name','tokens']);
 }
 
 

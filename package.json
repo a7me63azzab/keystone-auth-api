@@ -4,7 +4,9 @@
   "private": true,
   "dependencies": {
     "async": "2.1.4",
+    "axios": "^0.17.1",
     "bcryptjs": "^2.4.3",
+    "cors": "^2.8.4",
     "dotenv": "4.0.0",
     "jsonwebtoken": "^8.1.1",
     "keystone": "4.0.0-beta.5",

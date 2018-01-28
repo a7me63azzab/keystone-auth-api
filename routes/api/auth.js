@@ -1,7 +1,6 @@
 var keystone = require('keystone'),
     User = keystone.list('User');
 var _ = require('lodash');
-// const mailer = require('pug-mailer');
 var {sendEmail} = require('../../lib/send-email');
 
 
@@ -11,7 +10,7 @@ exports.registerUser = (req, res)=>{
     newUser.save().then(() => {
         return newUser.generateAuthToken();
       }).then((token) => {
-        res.header('x-auth', token).send(newUser.toJSON());
+        res.header('X-auth', token).send(newUser.toJSON());
       }).catch((e) => {
         res.status(400).send(e);
       })
@@ -31,7 +30,9 @@ exports.userLogin = (req, res)=>{
   var body = _.pick(req.body,['email','password']);
   User.model.findByCredentials(body.email,body.password).then((user)=>{
       return user.generateAuthToken().then((token)=>{
-        res.header('x-auth',token).send(user.toJSON());
+        user['x-auth']={token};
+        res.header('x-auth',token).send(user.toJSON()); //if i want to send the token into the header.
+        // res.send(token);
       });
   }).catch((err)=>{
       res.status(400).send({

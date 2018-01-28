@@ -22,6 +22,7 @@
 var keystone = require('keystone');
 var middleware = require('./middleware');
 var importRoutes = keystone.importer(__dirname);
+var cors = require('cors');
 
 // Common Middleware
 keystone.pre('routes', middleware.initLocals);
@@ -38,18 +39,35 @@ exports = module.exports = function (app) {
 	// Views
 	app.get('/', routes.views.index);
 
+	//to solve this error“No 'Access-Control-Allow-Origin' header is present on the requested resource” 
+	//error when Postman does not?
+	// to make keystone pass Cross-Origin Resource Sharing (CORS) related errors
+	app.use(function(req, res, next) { //allow cross origin requests
+		res.setHeader("Access-Control-Allow-Methods", "POST, PUT, OPTIONS, DELETE, GET");
+		res.header("Access-Control-Allow-Origin", "http://localhost:8080");
+		res.header("Access-Control-Allow-Headers","Content-Type");
+		res.header("Access-Control-Expose-Headers", "Access-Control-Allow-Headers,X-auth,Origin, X-Requested-With, Content-Type, Accept");
+		next();
+	});
+
+	// to solve OPTIONS 404s error
+	app.options('/api*', function(req, res) { res.sendStatus(200); });
+
+
+	//----------------------------------------------//
+	
 	//userRegister
-	app.post('/api/auth/register',routes.api.auth.registerUser);
+	app.post('/api/auth/register',cors(),routes.api.auth.registerUser);
 	//userLogIn
-	app.post('/api/auth/login',routes.api.auth.userLogin);
+	app.post('/api/auth/login',cors(),routes.api.auth.userLogin);
 	//get All Users
-	app.get('/api/auth/all',routes.api.auth.getAllUsers);
+	app.get('/api/auth/all',cors(),routes.api.auth.getAllUsers);
 
 	//forget Password
-	app.post('/api/auth/forgetpassword',routes.api.auth.forgetPassword);
+	app.post('/api/auth/forgetpassword',cors(),routes.api.auth.forgetPassword);
 	
 	//reset Password
-	app.post('/api/auth/resetpassword/:resetpasswordkey',routes.api.auth.resetPassword);
+	app.post('/api/auth/resetpassword/:resetpasswordkey',cors(),routes.api.auth.resetPassword);
 	
 
 	// NOTE: To protect a route so that only admins can see it, use the requireUser middleware:
