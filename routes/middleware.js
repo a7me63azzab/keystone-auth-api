@@ -11,7 +11,6 @@ var _ = require('lodash');
 var keystone = require('keystone'),
     User = keystone.list('User');
 
-
 /**
 	Initialises the standard view locals
 
@@ -56,15 +55,25 @@ exports.requireUser = function (req, res, next) {
 };
 
 exports.authenticate = (req ,res ,next)=>{
-	var token = req.header('x-auth');
+	var token = req.header('X-auth');
+	console.log('token',token);
 	User.model.findByToken(token).then((user)=>{
 	  if(!user){
+		  console.log('user not found');
 		  return Promise.reject();
 	  }
 	  req.user = user;
 	  req.token = token; 
 	  next();
 	}).catch((err)=>{
-		  res.status(401).send();
+		  res.status(401).send({success:false});
+		  console.log('error',err);
 	});
    };
+
+
+   //-------------------
+
+
+
+

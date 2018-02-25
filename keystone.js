@@ -20,7 +20,7 @@ keystone.init({
 	'view engine': 'pug',
 
 	'emails': 'templates/emails',
-
+	'cloudinary config': 'cloudinary://558724916516968:ja2dxejAypRTvgdvpJRPO7_S9Cc@a7me6azza8',
 	'auto update': true,
 	'session': true,
 	'auth': true,
@@ -48,6 +48,7 @@ keystone.set('routes', require('./routes'));
 keystone.set('nav', {
 	users: 'users',
 });
+
 
 // Start Keystone to connect to your database and initialise the web server
 

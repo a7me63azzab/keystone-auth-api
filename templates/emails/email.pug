@@ -5,5 +5,8 @@ html(lang="en")
      h1 Hi #{username}!
      p You recently requested a link to reset your raven password.
      p Please set a new password by following the link below:
-     - url = `http://localhost:3000/api/auth/resetpassword/${resetKey}`
+     - url = `https://antreactfire-chat-demo.herokuapp.com/resetpassword/?resetpasswordkey=${resetKey}`
      a(href=url) Reset Password
+
+
+         //-  - url = `http://localhost:3000/api/auth/resetpassword/${resetKey}`
