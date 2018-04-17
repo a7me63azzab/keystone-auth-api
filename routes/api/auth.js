@@ -4,15 +4,22 @@ var _ = require('lodash');
 let randomstring = require('randomstring');
 let crypto = require('crypto-js');
 let fs = require('fs');
+const md5 = require('md5');
 const {ObjectID} = require("mongodb");
 var {sendEmail} = require('../../lib/send-email');
 
 let _generateUniqueFileName = () => crypto.SHA256(randomstring.generate() + new Date().getTime() + 'hasve').toString();
 
+const getUserGavatar=(email)=>{
+      let emailHash = md5( email.toLowerCase().trim() );
+      console.log('emailHash',emailHash);
+      return `https://www.gravatar.com/avatar/${emailHash}?d=monsterid`
+    }
+
 
 // exports.registerUser = (req, res)=>{
 
-//   let imgRawData = req.body.imgData.replace(/^data:image\/\w+;base64,/, ""); 
+//   let imgRawData = req.body.imgData.replace(/^data:image\/\w+;base64,/, "");
 
 //   let buf = new Buffer(imgRawData, 'base64'); //[?]
 //   let fileName = _generateUniqueFileName() + '.png';
@@ -49,60 +56,88 @@ let _generateUniqueFileName = () => crypto.SHA256(randomstring.generate() + new 
 //       }).catch((e) => {
 //         console.log('error');
 //         res.status(400).send(e);
-//       }) 
+//       })
 //       });
 // };
 
 
 exports.registerUser = (req, res)=>{
-  
-  // 1- check if the user is already registered or not 
+
+  // 1- check if the user is already registered or not
   // get user by email
   User.model.findOne({
     email:req.body.email
     }).then((user)=>{
         console.log("user",user);
         if(!user){
-          //add new user
-          let imgRawData = req.body.imgData.replace(/^data:image\/\w+;base64,/, ""); 
+          console.log('image data -->',req.body.imgData);
+          if(req.body.imgData){
+            console.log('image data --> blender');
+            //add new user
+            let imgRawData = req.body.imgData.replace(/^data:image\/\w+;base64,/, "");
 
-            let buf = new Buffer(imgRawData, 'base64'); //[?]
-            let fileName = _generateUniqueFileName() + '.png';
-            let filePath = 'public/uploads/files/';
-            fs.writeFile(filePath + fileName, buf, (err) => {
-              if (err) {
-                console.log('file not saved',err);
-              }
-          
-              var userData = {
-                userImage: {
-                  filename: fileName,
-                  size: buf.toString().length,
-                  mimetype: 'image/jpeg',
-                  path: filePath,
-                  //originalname: 'photo.jpg',
-                  url: "http://localhost:3000/uploads/files/" + fileName,
-                },
-                name:{
-                  first:req.body.first,
-                  last:req.body.last
-                },
-                username:req.body.username,
-                email:req.body.email,
-                password:req.body.password,
-                isOnline:req.body.isOnline
-              };
-              console.log('userData',userData);
-              var newUser = new User.model(userData);
-              newUser.save().then(() => {
-                  return newUser.generateAuthToken();
-                }).then((token) => {
-                  res.header('X-auth', token).send(newUser.toJSON());
-                }).catch((e) => {
-                  console.log('error');
-                  res.status(400).send(e);
-                }) 
-                });
+              let buf = new Buffer(imgRawData, 'base64'); //[?]
+              let fileName = _generateUniqueFileName() + '.png';
+              let filePath = 'public/uploads/files/';
+              fs.writeFile(filePath + fileName, buf, (err) => {
+                if (err) {
+                  console.log('file not saved',err);
+                }
+
+                let userData = {
+                  // userImage: {
+                  //   filename: fileName,
+                  //   size: buf.toString().length,
+                  //   mimetype: 'image/jpeg',
+                  //   path: filePath,
+                  //   //originalname: 'photo.jpg',
+                  //   url: "http://localhost:3000/uploads/files/" + fileName,
+                  // },
+                  userImage:"http://localhost:3000/uploads/files/" + fileName,
+                  name:{
+                    first:req.body.first,
+                    last:req.body.last
+                  },
+                  username:req.body.username,
+                  email:req.body.email,
+                  password:req.body.password,
+                  isOnline:req.body.isOnline
+                };
+                console.log('userData',userData);
+                var newUser = new User.model(userData);
+                newUser.save().then(() => {
+                    return newUser.generateAuthToken();
+                  }).then((token) => {
+                    res.header('X-auth', token).send(newUser.toJSON());
+                  }).catch((e) => {
+                    console.log('error');
+                    res.status(400).send(e);
+                  })
+                  });
+          }else{
+              console.log('image data --> raven');
+            let userData = {
+              userImage:getUserGavatar(req.body.email),
+              name:{
+                first:req.body.first,
+                last:req.body.last
+              },
+              username:req.body.username,
+              email:req.body.email,
+              password:req.body.password,
+              isOnline:req.body.isOnline
+            };
+            console.log('userData',userData);
+            var newUser = new User.model(userData);
+            newUser.save().then(() => {
+                return newUser.generateAuthToken();
+              }).then((token) => {
+                res.header('X-auth', token).send(newUser.toJSON());
+              }).catch((e) => {
+                console.log('error');
+                res.status(400).send(e);
+              })
+          }
         }else{
           res.send({isRegistered:true});
           console.log('user alreday registered');
@@ -117,7 +152,7 @@ exports.registerUser = (req, res)=>{
 
 // exports.registerUser = (req, res)=>{
 //   var userData = req.body;
-//   // 1- check if the user is already registered or not 
+//   // 1- check if the user is already registered or not
 //   // get user by email
 //     var email = userData.email;
 //   User.model.findOne({
@@ -273,26 +308,31 @@ exports.passwordConfirm = (req, res)=>{
 
 //Update User Profile
 exports.updateProfile=(req,res)=>{
+
   let userEmail = req.body.email;
   let imageData = req.body.imgData;
   let userName = req.body.username;
   let imageUrl = req.body.userImage;
 
-  if(imageData && userName){
-    var imageName = imageUrl.split('/').pop();
-    fs.unlink(`public/uploads/files/${imageName}`, function(err) {
-      if(err && err.code == 'ENOENT') {
-          // file doens't exist
-          console.info("File doesn't exist, won't remove it.");
-      } else if (err) {
-          // other errors, e.g. maybe we don't have enough permission
-          console.error("Error occurred while trying to remove file");
-      } else {
-          console.info(`removed`);
-      }
-  });
+
+  if(imageData){
+
+    if(imageUrl && imageUrl.includes('public/uploads/files/')){
+      var imageName = imageUrl.split('/').pop();
+      fs.unlink(`public/uploads/files/${imageName}`, function(err) {
+        if(err && err.code == 'ENOENT') {
+            // file doens't exist
+            console.info("File doesn't exist, won't remove it.");
+        } else if (err) {
+            // other errors, e.g. maybe we don't have enough permission
+            console.error("Error occurred while trying to remove file");
+        } else {
+            console.info(`removed`);
+        }
+    });
+    }
   //-----------------
-  let imgRawData = imageData.replace(/^data:image\/\w+;base64,/, ""); 
+  let imgRawData = imageData.replace(/^data:image\/\w+;base64,/, "");
 
   let buf = new Buffer(imgRawData, 'base64'); //[?]
   let fileName = _generateUniqueFileName() + '.png';
@@ -304,15 +344,8 @@ exports.updateProfile=(req,res)=>{
 
     User.model.findOne({ email: userEmail}).then(user=>{
       if(!user) return res.send({Error:'User Not Found'});
-      user.username=userName;
-      user.userImage= {
-        filename: fileName,
-        size: buf.toString().length,
-        mimetype: 'image/jpeg',
-        path: filePath,
-        //originalname: 'photo.jpg',
-        url: "http://localhost:3000/uploads/files/" + fileName,
-      };
+      user.username = userName;
+      user.userImage="http://localhost:3000/uploads/files/" + fileName;
       user.save().then(()=>{
         res.status(200).send(user.toJSON());
       }).catch(err=>{
@@ -323,7 +356,21 @@ exports.updateProfile=(req,res)=>{
       console.log('user not found',err);
     });
       });
-  } 
+  }else{
+    User.model.findOne({ email: userEmail}).then(user=>{
+      if(!user) return res.send({Error:'User Not Found'});
+      user.username = userName;
+      user.userImage=imageUrl;
+      user.save().then(()=>{
+        res.status(200).send(user.toJSON());
+      }).catch(err=>{
+        res.status(400).send({error:' UserProfile not updated'});
+      });
+
+    }).catch(err=>{
+      console.log('user not found',err);
+    });
+  }
 }
 
 //update User Password

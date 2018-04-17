@@ -15,27 +15,28 @@ var User = new keystone.List('User',{
 	autokey:{path:'slug', from:'username',uniqe:true}
 });
 
-var myStorage = new keystone.Storage({
-	adapter: keystone.Storage.Adapters.FS,
-	schema:{
-		size: true,
-		mimetype: true,
-		path: true,
-		originalname: false,
-		url: true,
-	  },
-	fs: {
-	  path: keystone.expandPath('./public/uploads/images'), // required; path where the files should be stored
-	  publicPath: '/public/uploads/images', // path where files will be served
-	}
-  });
+// var myStorage = new keystone.Storage({
+// 	adapter: keystone.Storage.Adapters.FS,
+// 	schema:{
+// 		size: true,
+// 		mimetype: true,
+// 		path: true,
+// 		originalname: false,
+// 		url: true,
+// 	  },
+// 	fs: {
+// 	  path: keystone.expandPath('./public/uploads/images'), // required; path where the files should be stored
+// 	  publicPath: '/public/uploads/images', // path where files will be served
+// 	}
+//   });
 
 
 User.add({
-	userImage:{
-		type: Types.File,
-		storage:myStorage
-	},
+	// userImage:{
+	// 	type: Types.File,
+	// 	storage:myStorage
+	// },
+	userImage:{type:String},
 	username: { type: String, required: true, initial:true,uniqe:true, index: true },
 	name:{type:Types.Name,required:true,index:true},
 	email: { type: Types.Email, initial: true, required: true, unique: true, index: true },
@@ -69,7 +70,7 @@ User.schema.virtual('canAccessKeystone').get(function () {
 User.schema.methods.toJSON=function(){
     var user = this;
     var userObject = user.toObject();
-    return _.pick(userObject,['_id','email','username','name','tokens','resetPasswordKey','isOnline','loggedOutAt','userImage']);
+    return _.pick(userObject,['_id','email','username','isAdmin','name','tokens','resetPasswordKey','isOnline','loggedOutAt','userImage']);
 }
 
 
